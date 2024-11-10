@@ -1,0 +1,23 @@
+{
+  "name": "livecaller",
+  "version": "1.0.0",
+  "description": "a system to call an API so draft fantasy can be refreshed",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/haris316/livecaller.git"
+  },
+  "author": "haris316",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/haris316/livecaller/issues"
+  },
+  "homepage": "https://github.com/haris316/livecaller#readme",
+  "dependencies": {
+    "express": "^4.21.1"
+  }
+}
