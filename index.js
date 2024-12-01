@@ -28,7 +28,7 @@ setInterval(function () {
     fetch("https://fantasydraft-beta.vercel.app/api/cron/live", { agent }).then((res) => {
         console.log(res.statusText);
     })
-}, 60 * 1000);
+}, 5 * 60 * 1000);
 
 app.get('/', (req, res) => {
     res.send('Hello World');
