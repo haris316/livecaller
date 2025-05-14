@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "a system to call an API so draft fantasy can be refreshed",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon index.js"
@@ -19,7 +20,10 @@
   "homepage": "https://github.com/haris316/livecaller#readme",
   "dependencies": {
     "axios": "^1.7.7",
+    "dotenv": "^16.4.5",
     "express": "^4.21.1",
-    "https": "^1.0.0"
+    "https": "^1.0.0",
+    "mongoose": "^8.8.3",
+    "nodemon": "^3.1.10"
   }
 }

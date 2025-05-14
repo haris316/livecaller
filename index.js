@@ -1,35 +1,38 @@
-const express = require('express');
-const https = require("https");
-const axios = require("axios");
+import express from 'express';
+import http from 'http';
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
-const port = process.env.PORT || 7000;
+dotenv.config();
+
+const PORT = process.env.PORT || 7000;
 const app = express();
-app.use(express.json());
-const agent = new https.Agent({
-    rejectUnauthorized: false
-})
 
+// Middleware
+app.use(express.json());
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
-    res.setHeader(
-        'Access-Control-Allow-Methods',
-        'GET, POST, OPTIONS, PUT, PATCH, DELETE'
-    );
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
     next();
 });
 
+// Create HTTP server
+const server = http.createServer(app);
 
-app.listen(port, () => {
-    console.log(`Server listening on port ${port}`);
-});
+// Start Server and Connect to DB
+try {
+    await mongoose.connect(process.env.NEXT_PUBLIC_MONGO, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+    });
+    console.log('Connected to database');
 
-setInterval(function () {
-    fetch("https://fantasydraft-beta.vercel.app/api/cron/live", { agent }).then((res) => {
-        console.log(res.statusText);
-    })
-}, 5 * 60 * 1000);
+    server.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+} catch (error) {
+    console.error('Database connection error:', error);
+}
 
-app.get('/', (req, res) => {
-    res.send('Hello World');
-});
+//Routes
+// app.use('/api/users', userRoutes);
