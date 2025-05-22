@@ -3,6 +3,11 @@ import http from 'http';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 
+import test from "./routes/test/route.js"
+import daily from "./routes/daily/route.js"
+import live from "./routes/live/route.js"
+import points from "./routes/points/route.js"
+
 dotenv.config();
 
 const PORT = process.env.PORT || 7000;
@@ -21,10 +26,7 @@ const server = http.createServer(app);
 
 // Start Server and Connect to DB
 try {
-    await mongoose.connect(process.env.NEXT_PUBLIC_MONGO, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-    });
+    await mongoose.connect(process.env.NEXT_PUBLIC_MONGO);
     console.log('Connected to database');
 
     server.listen(PORT, () => {
@@ -35,4 +37,7 @@ try {
 }
 
 //Routes
-// app.use('/api/users', userRoutes);
+app.use('/cron/test', test);
+app.use('/cron/daily', daily);
+app.use('/cron/live', live);
+app.use('/cron/points', points);
