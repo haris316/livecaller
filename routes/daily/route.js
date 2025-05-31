@@ -1,7 +1,7 @@
 import express from 'express';
 import axios from 'axios';
 import https from 'https'; 
-import { FantasyLeague, FantasyTeam, GameWeek, Match, Standing } from '../../models.js';
+import { Player, FantasyLeague, FantasyTeam, GameWeek, Match, Standing } from '../../models.js';
 const router = express.Router();
 
 
