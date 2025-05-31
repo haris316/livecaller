@@ -1,6 +1,6 @@
 import express from 'express';
 import axios from 'axios';
-import https from 'https'; 
+import https from 'https';
 import { Player, FantasyLeague, FantasyTeam, GameWeek, Match, Standing } from '../../models.js';
 const router = express.Router();
 
@@ -237,7 +237,7 @@ const calculateTeamPoints = async (league, team, gameweek) => {
                     console.log(playerPoints)
                     if (!isNaN(playerPoints)) {
                         // console.log("inside nan condition")
-                        if (playerObj.captain) { playerPoints = playerPoints * 2; }
+                        // if (playerObj.captain) { playerPoints = playerPoints * 2; }
                         points += playerPoints;
                     }
                     console.log("new team points")
@@ -252,8 +252,105 @@ const calculateTeamPoints = async (league, team, gameweek) => {
     } catch (err) {
         console.log("error occurred");
         console.log(err);
+        throw err;
     }
 }
 
+const calculatePlayerPoints = async (league, player, gameweek) => {
+    try {
+        let points = 0;
+        let stats = {
+            "goals": 0,
+            "assists": 0,
+            "clean-sheet": 0,
+            "goals-conceded": 0,
+            "penalty_save": 0,
+            "saves": 0,
+            "penalty_miss": 0,
+            "yellowcards": 0,
+            "redcards": 0,
+            "minutes-played": 0,
+            "tackles": 0,
+            "interceptions": 0,
+            "bonus": 0
+        };
+        let points_config = {
+            "goals": 5,
+            "assists": 3,
+            "clean-sheet": 4,
+            "goals-conceded": -1,
+            "penalty_save": 5,
+            "saves": 0.333,
+            "penalty_miss": -3,
+            "yellowcards": -1,
+            "redcards": -3,
+            "minutes-played": 1,
+            "tackles": 0.2,
+            "interceptions": 0.2,
+            "bonus": 1
+        };
+        league.points_configuration.forEach((item) => {
+            if (item.gameweek === gameweek.name) {
+                points_config["goals"] = item["goals"];
+                points_config["assists"] = item["assists"];
+                points_config["clean-sheet"] = item["clean-sheet"];
+                points_config["goals-conceded"] = item["goals-conceded"];
+                points_config["penalty_save"] = item["penalty_save"];
+                points_config["saves"] = item["saves"];
+                points_config["penalty_miss"] = item["penalty_miss"];
+                points_config["yellowcards"] = item["yellowcards"];
+                points_config["redcards"] = item["redcards"];
+                points_config["minutes-played"] = item["minutes-played"];
+                points_config["tackles"] = item["tackles"];
+                points_config["interceptions"] = item["interceptions"];
+                points_config["bonus"] = item["bonus"];
+            }
+        })
+
+        player.points.forEach((item) => {
+            if (item.gameweek.equals(gameweek._id)) {
+                stats["goals"] = item.fpl_stats["goals"];
+                stats["assists"] = item.fpl_stats["assists"];
+                stats["clean-sheet"] = item.fpl_stats["clean-sheet"];
+                stats["goals-conceded"] = item.fpl_stats["goals-conceded"];
+                stats["penalty_save"] = item.fpl_stats["penalty_save"];
+                stats["saves"] = item.fpl_stats["saves"];
+                stats["penalty_miss"] = item.fpl_stats["penalty_miss"];
+                stats["yellowcards"] = item.fpl_stats["yellowcards"];
+                stats["redcards"] = item.fpl_stats["redcards"];
+                stats["minutes-played"] = item.fpl_stats["minutes-played"];
+                stats["tackles"] = item.fpl_stats["tackles"];
+                stats["interceptions"] = item.fpl_stats["interceptions"];
+                stats["bonus"] = item.fpl_stats["bonus"];
+            }
+        })
+        // console.log("points_config");
+        // console.log(points_config);
+        // console.log("stats");
+        // console.log(stats);
+        if (stats["minutes-played"] > 60) points = points + (2 * points_config["minutes-played"])
+        else if (stats["minutes-played"] > 30) points = points + (1 * points_config["minutes-played"])
+        points = points + (stats.goals * points_config["goals"]);
+        points = points + (stats.assists * points_config["assists"]);
+        if (player.position_name == "Goalkeeper" || player.position_name == "Defender") points = points + (stats["clean-sheet"] * points_config["clean-sheet"]);
+        if (player.position_name == "Goalkeeper" || player.position_name == "Defender") points = points + (stats["goals-conceded"] * points_config["goals-conceded"]);
+        points = points + (stats.penalty_save * points_config["penalty_save"]);
+        points = points + Math.floor(stats.saves * points_config["saves"]);
+        points = points + (stats.penalty_miss * points_config["penalty_miss"]);
+        points = points + (stats.yellowcards * points_config["yellowcards"]);
+        points = points + (stats.redcards * points_config["redcards"]);
+        points = points + Math.floor(stats.tackles * points_config["tackles"]);
+        points = points + (stats.interceptions * points_config["interceptions"]);
+        points = points + (stats.bonus * points_config["bonus"]);
+        if (points > 0) points = Math.floor(points)
+        else points = Math.ceil(points);
+
+        return points;
+    } catch (err) {
+        console.log("error occurred")
+        console.log(err)
+        throw err;
+    }
+}
 
 export default router;
