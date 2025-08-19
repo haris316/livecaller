@@ -50,6 +50,12 @@ router.get('/players', async (req, res) => {
                         }
                     });
                 }
+                // Execute batch update
+                if (bulkOps.length > 50) {
+                    await Player.bulkWrite(bulkOps);
+                    console.log(`Updated ratings for ${bulkOps.length} players.`);
+                    bulkOps = [];
+                }
             } catch {
                 console.log("Some error with")
                 console.log(player)
@@ -57,16 +63,14 @@ router.get('/players', async (req, res) => {
                 continue
             }
         }
-
         // Execute batch update
         if (bulkOps.length > 0) {
             await Player.bulkWrite(bulkOps);
             console.log(`Updated ratings for ${bulkOps.length} players.`);
         }
-
         return res.status(200).json({
             error: false,
-            message: `Updated ratings for ${bulkOps.length} players.`
+            message: `Updated ratings for players successfully.`
         });
 
     } catch (err) {
