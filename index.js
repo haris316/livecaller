@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 
 import test from "./routes/test/route.js"
+import weekly from "./routes/weekly/route.js"
 import daily from "./routes/daily/route.js"
 import live from "./routes/live/route.js"
 import points from "./routes/points/route.js"
@@ -38,6 +39,7 @@ try {
 
 //Routes
 app.use('/cron/test', test);
+app.use('/cron/weekly', weekly);
 app.use('/cron/daily', daily);
 app.use('/cron/live', live);
 app.use('/cron/points', points);
