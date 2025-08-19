@@ -181,7 +181,7 @@ router.get('/', async (req, res) => {
                         })
                     }
                     let stats = statistic_response.data.data.filter((item) => item.id == team.participant.id)[0].statistics[0].details
-                    // console.log(stats);
+                    console.log(team.participant.name);
                     let standing = {
                         "id": team.participant.id,
                         "name": team.participant.name,
@@ -190,15 +190,15 @@ router.get('/', async (req, res) => {
                         "points": team.points,
                         "position": team.position,
                         "form": form,
-                        "rating": stats.filter((item) => item.type_id == 118)[0].value.value,
-                        "scoring_frequency": stats.filter((item) => item.type_id == 27248)[0].value.scoring_frequency,
-                        "lost": stats.filter((item) => item.type_id == 216)[0].value.all.count,
-                        "games_played": stats.filter((item) => item.type_id == 27263)[0].value.total,
-                        "draws": stats.filter((item) => item.type_id == 215)[0].value.all.count,
-                        "goals_conceded": stats.filter((item) => item.type_id == 88)[0].value.all.count,
-                        "goals_scored": stats.filter((item) => item.type_id == 52)[0].value.all.count,
-                        "wins": stats.filter((item) => item.type_id == 214)[0].value.all.count,
-                        "cleansheets": stats.filter((item) => item.type_id == 194)[0].value.all.count,
+                        "rating": stats.filter((item) => item.type_id == 118)[0]?.value?.value,
+                        "scoring_frequency": stats.filter((item) => item.type_id == 27248)[0]?.value.scoring_frequency,
+                        "lost": stats.filter((item) => item.type_id == 216)[0]?.value.all.count,
+                        "games_played": stats.filter((item) => item.type_id == 27263)[0]?.value.total,
+                        "draws": stats.filter((item) => item.type_id == 215)[0]?.value.all.count,
+                        "goals_conceded": stats.filter((item) => item.type_id == 88)[0]?.value.all.count,
+                        "goals_scored": stats.filter((item) => item.type_id == 52)[0]?.value.all.count,
+                        "wins": stats.filter((item) => item.type_id == 214)[0]?.value.all.count,
+                        "cleansheets": stats.filter((item) => item.type_id == 194)[0]?.value.all.count,
                     }
                     // await connectToDb();
                     // console.log(standing)
