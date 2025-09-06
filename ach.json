@@ -1,0 +1,166 @@
+[
+  {
+    "name": "UNSTOPPABLE",
+    "description": "Win 8 matches in a row.",
+    "image": "/images/achievements/unstoppable.png"
+  },
+  {
+    "name": "KING",
+    "description": "Win a draft league.",
+    "image": "/images/achievements/king.png"
+  },
+  {
+    "name": "BIN MAN",
+    "description": "Lose a draft league.",
+    "image": "/images/achievements/binman.png"
+  },
+  {
+    "name": "DESTROYER",
+    "description": "Double your opponent's score in a single gameweek.",
+    "image": "/images/achievements/destroyer.png"
+  },
+  {
+    "name": "ICEMAN",
+    "description": "Lead for 30 weeks out of 38.",
+    "image": "/images/achievements/iceman.png"
+  },
+  {
+    "name": "MIXOLOGIST",
+    "description": "Win a game with 11 players from different teams.",
+    "image": "/images/achievements/mixologist.png"
+  },
+  {
+    "name": "ROCKETMAN",
+    "description": "Get 2000+ points in a season.",
+    "image": "/images/achievements/rocketman.png"
+  },
+  {
+    "name": "FORTRESS",
+    "description": "Win a gameweek with 6 clean sheets.",
+    "image": "/images/achievements/fortress.png"
+  },
+  {
+    "name": "GUARDIAN",
+    "description": "22 keeper clean sheets.",
+    "image": "/images/achievements/guardian.png"
+  },
+  {
+    "name": "POLITICIAN",
+    "description": "Draw 4 matches.",
+    "image": "/images/achievements/politician.png"
+  },
+  {
+    "name": "PUNCH BAG",
+    "description": "Lose 8 matches in a row.",
+    "image": "/images/achievements/punchbag.png"
+  },
+  {
+    "name": "TARGETMAN",
+    "description": "Score 8 goals in a gameweek.",
+    "image": "/images/achievements/targetman.png"
+  },
+  {
+    "name": "THE WALL",
+    "description": "3 clean sheets from players of same team.",
+    "image": "/images/achievements/thewall.png"
+  },
+  {
+    "name": "EARLY BIRD",
+    "description": "Drafted for the 25/26 season.",
+    "image": "/images/achievements/earlybird.png"
+  },
+  {
+    "name": "LUCKY",
+    "description": "Win a match by 1 point three times.",
+    "image": "/images/achievements/lucky.png"
+  },
+  {
+    "name": "DREAMCATCHER",
+    "description": "Pick up the same player 4 times.",
+    "image": "/images/achievements/dreamcatcher.png"
+  },
+  {
+    "name": "THE BEAST",
+    "description": "21+ points from a defender.",
+    "image": "/images/achievements/beast.png"
+  },
+  {
+    "name": "THE BOTTLER",
+    "description": "Lose a draft on the final day.",
+    "image": "/images/achievements/bottler.png"
+  },
+  {
+    "name": "THE GHOST",
+    "description": "Go 3 weeks without a transfer.",
+    "image": "/images/achievements/ghost.png"
+  },
+  {
+    "name": "THE REAPER",
+    "description": "Beat a player in every matchup.",
+    "image": "/images/achievements/reaper.png"
+  },
+  {
+    "name": "THE GOAT",
+    "description": "Win 2 consecutive draft leagues.",
+    "image": "/images/achievements/goat.png"
+  },
+  {
+    "name": "THE WIZARD",
+    "description": "Average score of 50 per week.",
+    "image": "/images/achievements/wizard.png"
+  },
+  {
+    "name": "THE LOYAL",
+    "description": "Keep 12 of your original 15 players all season.",
+    "image": "/images/achievements/loyal.png"
+  },
+  {
+    "name": "THE SAVAGE",
+    "description": "Beat every player in the league in a row.",
+    "image": "/images/achievements/savage.png"
+  },
+  {
+    "name": "THE TINKERMAN",
+    "description": "Make 7 transfers in a single deadline.",
+    "image": "/images/achievements/tinkerman.png"
+  },
+  {
+    "name": "THE COLLECTOR",
+    "description": "Make over 200 transfers.",
+    "image": "/images/achievements/collector.png"
+  },
+  {
+    "name": "THE NUKE",
+    "description": "Score 26+ points with a single player.",
+    "image": "/images/achievements/nuke.png"
+  },
+  {
+    "name": "THE RELAXED",
+    "description": "25+ points from subs in a gameweek.",
+    "image": "/images/achievements/relaxed.png"
+  },
+  {
+    "name": "THE DROWNED",
+    "description": "Score less than 15 points in a single gameweek.",
+    "image": "/images/achievements/drowned.png"
+  },
+  {
+    "name": "THE RAT",
+    "image": "/images/achievements/rat.png"
+  },
+  {
+    "name": "THE COWBOY",
+    "description": "Pick up 2 players who score 1 point each in a gameweek.",
+    "image": "/images/achievements/cowboy.png"
+  },
+  {
+    "name": "THE SPINELESS",
+    "description": "Lose a league by 12 or more points.",
+    "image": "/images/achievements/spineless.png"
+  },
+  {
+    "name": "THE SNAKE",
+    "description": "Have a player from each position score 10+ points in a single week",
+    "image": "/images/achievements/snake.png"
+  }
+]
