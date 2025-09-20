@@ -439,6 +439,11 @@ const fantasyLeagueSchema = new mongoose.Schema({
     required: false,
     default: []
   },
+  winner: {
+    type: String,
+    required: false,
+    default: null
+  },
   users_onboard: {
     type: [String],
     required: false,

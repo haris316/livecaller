@@ -1,10 +1,13 @@
 import express from 'express';
 import axios from 'axios';
 import https from 'https';
-import { Player, FantasyLeague, FantasyTeam, Team, GameWeek, Match, Standing, User, FantasyAchievement } from '../../models.js';
+import { Player, FantasyLeague, FantasyTeam, Team, GameWeek, Match, Standing, User, FantasyAchievement, FantasyDraft } from '../../models.js';
 import mongoose from 'mongoose';
 const router = express.Router();
+import { calculateTeamPoints } from '../../helpers.js';
 
+
+// ACHIEVEMENTS
 router.get('/unstoppable', async (req, res) => {
     try {
         // Parameter to set number of wins required
@@ -27,7 +30,7 @@ router.get('/unstoppable', async (req, res) => {
                     if (team.team.user_email === user.email) {
                         // Convert form to array and check the form of the team for number of consecutive wins
                         let form_array = team.form.split(" ");
-                        console.log(form_array);
+                        // console.log(form_array);
                         let win_count = 0;
                         for (const form of form_array) {
                             // If win, increase win_count
@@ -50,19 +53,26 @@ router.get('/unstoppable', async (req, res) => {
                     // console.log(ach_obj)
                     // console.log(ach)
                     if (ach_obj.achievement.name === ach.name) {
-                        console.log("found")
+                        // console.log("found")
                         ach_found = true;
                         ach_obj.unlocked = true;
                         ach_obj.count = ach_count;
                     }
                 }
                 if (!ach_found) {
-                    console.log("still not found")
+                    // console.log("still not found")
                     user.achievements.push({
                         achievement: new mongoose.Types.ObjectId(ach._id),
                         unlocked: true,
                         count: ach_count
                     })
+                }
+            } else {
+                for (const ach_obj of user.achievements) {
+                    if (ach_obj.achievement.name === ach.name) {
+                        ach_obj.unlocked = false;
+                        ach_obj.count = 0;
+                    }
                 }
             }
             // Save user
@@ -81,7 +91,383 @@ router.get('/unstoppable', async (req, res) => {
         });
     }
 })
+router.get('/king', async (req, res) => {
+    try {
+        // Parameter to set number of wins required
+        let ach = await FantasyAchievement.findOne({ name: "KING" });
+        // Fetch all users and parse one by one
+        let users = await User.find({}).populate("achievements.achievement");
+        for (const user of users) {
+            console.log("Processing user: " + user.email);
+            let ach_count = 0;
+            // Fetch all leagues where user is present
+            let leagues = await FantasyLeague.find({ users_onboard: user.email, is_deleted: false, })
+            for (const league of leagues) {
+                console.log(" Processing league: " + league.league_name);
+                // Fetch user's team in the league
+                if (league.winner && league.winner === user.email) ach_count = ach_count + 1;
+            }
+            // When all leagues of user are processed. Check if ach_count > 0, update user's achievements
+            if (ach_count > 0) {
+                let ach_found = false
+                for (const ach_obj of user.achievements) {
+                    // console.log(ach_obj)
+                    // console.log(ach)
+                    if (ach_obj.achievement.name === ach.name) {
+                        // console.log("found")
+                        ach_found = true;
+                        ach_obj.unlocked = true;
+                        ach_obj.count = ach_count;
+                    }
+                }
+                if (!ach_found) {
+                    // console.log("still not found")
+                    user.achievements.push({
+                        achievement: new mongoose.Types.ObjectId(ach._id),
+                        unlocked: true,
+                        count: ach_count
+                    })
+                }
+            } else {
+                for (const ach_obj of user.achievements) {
+                    if (ach_obj.achievement.name === ach.name) {
+                        ach_obj.unlocked = false;
+                        ach_obj.count = 0;
+                    }
+                }
+            }
+            // Save user
+            await user.save();
+        }
+        return res.status(200).json({
+            error: false,
+            message: "KING - Processed Successfully.",
+        });
+    }
+    catch (err) {
+        console.log(err);
+        return res.status(200).json({
+            error: true,
+            message: "An unexpected error occurred. Please try again later.",
+        });
+    }
+})
+router.get('/bin_man', async (req, res) => {
+    try {
+        // Parameter to set number of wins required
+        let ach = await FantasyAchievement.findOne({ name: "BIN MAN" });
+        // Fetch all users and parse one by one
+        let users = await User.find({}).populate("achievements.achievement");
+        for (const user of users) {
+            console.log("Processing user: " + user.email);
+            let ach_count = 0;
+            // Fetch all leagues where user is present
+            let leagues = await FantasyLeague.find({ users_onboard: user.email, is_deleted: false, })
+            for (const league of leagues) {
+                console.log(" Processing league: " + league.league_name);
+                // Fetch user's team in the league
+                if (league.winner !== null && league.winner !== user.email) ach_count = ach_count + 1;
+            }
+            // When all leagues of user are processed. Check if ach_count > 0, update user's achievements
+            if (ach_count > 0) {
+                let ach_found = false
+                for (const ach_obj of user.achievements) {
+                    // console.log(ach_obj)
+                    // console.log(ach)
+                    if (ach_obj.achievement.name === ach.name) {
+                        // console.log("found")
+                        ach_found = true;
+                        ach_obj.unlocked = true;
+                        ach_obj.count = ach_count;
+                    }
+                }
+                if (!ach_found) {
+                    // console.log("still not found")
+                    user.achievements.push({
+                        achievement: new mongoose.Types.ObjectId(ach._id),
+                        unlocked: true,
+                        count: ach_count
+                    })
+                }
+            } else {
+                for (const ach_obj of user.achievements) {
+                    if (ach_obj.achievement.name === ach.name) {
+                        ach_obj.unlocked = false;
+                        ach_obj.count = 0;
+                    }
+                }
+            }
+            // Save user
+            await user.save();
+        }
+        return res.status(200).json({
+            error: false,
+            message: "BIN MAN - Processed Successfully.",
+        });
+    }
+    catch (err) {
+        console.log(err);
+        return res.status(200).json({
+            error: true,
+            message: "An unexpected error occurred. Please try again later.",
+        });
+    }
+})
+router.get('/destroyer', async (req, res) => {
+    try {
+        // Parameter to set number of wins required
+        let ach = await FantasyAchievement.findOne({ name: "DESTROYER" });
+        let last_gameweek = null;
+        let curr_gameweek = await GameWeek.findOne({ is_current: true });
+        if (!curr_gameweek) {
+            return res.status(200).json({
+                error: true,
+                message: "No current game week found.",
+            });
+        } else {
+            let last_gameweek_num = parseInt(curr_gameweek.name) - 1;
+            last_gameweek = await GameWeek.findOne({ name: "" + last_gameweek_num });
+        }
+        if (last_gameweek) {
+            // Fetch all users and parse one by one
+            let users = await User.find({}).populate("achievements.achievement");
+            for (const user of users) {
+                console.log("Processing user: " + user.email);
+                let ach_count = 0;
+                // Fetch all leagues where user is present
+                let leagues = await FantasyLeague.find({ users_onboard: user.email, is_deleted: false, 'league_configuration.format': 'Head to Head' }).populate("draftID")
+                for (const league of leagues) {
+                    if (league.draftID.state === "Ended"){
+                        console.log(" Processing league: " + league.league_name);
+                        // console.log(league.draftID)
+                        // console.log(league.league_fixtures)
+                    for (const fixture of league.league_fixtures) {
+                        if (fixture.gameweek === last_gameweek.name) {
+                            // console.log(fixture);
+                            let user_team = null;
+                            let opp_team = null;
+                            let team1 = FantasyTeam.findOne({ _id: fixture.teams[0] });
+                            let team2 = FantasyTeam.findOne({ _id: fixture.teams[1] });
+                            if (team1 && team2) {
+                                if (team1.user_email === user.email) {
+                                    user_team = team1
+                                    opp_team = team2
+                                }
+                                else if (team2.user_email === user.email) {
+                                    user_team = team2
+                                    opp_team = team1
+                                }
+                                if (user_team && opp_team) {
+                                    let user_points = calculateTeamPoints(league, user_team, last_gameweek)
+                                    let opp_points = calculateTeamPoints(league, opp_team, last_gameweek)
+                                    if ((user_points > (2 * opp_points))) {
+                                        ach_count = ach_count + 1;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            // When all leagues of user are processed. Check if ach_count > 0, update user's achievements
+            if (ach_count > 0) {
+                let ach_found = false
+                for (const ach_obj of user.achievements) {
+                    // console.log(ach_obj)
+                    // console.log(ach)
+                    if (ach_obj.achievement.name === ach.name) {
+                        // console.log("found")
+                        ach_found = true;
+                        ach_obj.unlocked = true;
+                        ach_obj.count = ach_obj.count + ach_count;
+                    }
+                }
+                if (!ach_found) {
+                    // console.log("still not found")
+                    user.achievements.push({
+                        achievement: new mongoose.Types.ObjectId(ach._id),
+                        unlocked: true,
+                        count: ach_count
+                    })
+                }
+                // Save user
+                await user.save();
+            }
+        }
+    } else {
+        return res.status(200).json({
+            error: true,
+            message: "No last game week found.",
+        });
+    }
+    return res.status(200).json({
+        error: false,
+        message: "DESTROYER - Processed Successfully.",
+    });
+}
+    catch (err) {
+    console.log(err);
+    return res.status(200).json({
+        error: true,
+        message: "An unexpected error occurred. Please try again later.",
+    });
+}
+})
+router.get('/punchbag', async (req, res) => {
+    try {
+        // Parameter to set number of wins required
+        const lose_number = 8;
+        let ach = await FantasyAchievement.findOne({ name: "PUNCHBAG" });
+        // Fetch all users and parse one by one
+        let users = await User.find({}).populate("achievements.achievement");
+        for (const user of users) {
+            console.log("Processing user: " + user.email);
+            let ach_count = 0;
+            // Fetch all leagues where user is present and format is H2H
+            let leagues = await FantasyLeague.find({ users_onboard: user.email, is_deleted: false, 'league_configuration.format': 'Head to Head' }).populate("head_to_head_points.team")
+            for (const league of leagues) {
+                console.log(" Processing league: " + league.league_name);
+                // Fetch user's team in the league
+                for (const team of league.head_to_head_points) {
+                    // console.log("user email : "+user.email)
+                    // console.log(team.team.user_email);
+                    // console.log("team email : "+team.user_email)
+                    if (team.team.user_email === user.email) {
+                        // Convert form to array and check the form of the team for number of consecutive loses
+                        let form_array = team.form.split(" ");
+                        // console.log(form_array);
+                        let lose_count = 0;
+                        for (const form of form_array) {
+                            // If lose, increase lose_count
+                            if (form === "L") lose_count++;
+                            // else reset lose_count
+                            else lose_count = 0
+                            // If lose_count reaches lose_number, increase ach_count and reset lose_count
+                            if (lose_count === lose_number) {
+                                ach_count++;
+                                lose_count = 0;
+                            }
+                        }
+                    }
+                }
+            }
+            // When all leagues of user are processed. Check if ach_count > 0, update user's achievements
+            if (ach_count > 0) {
+                let ach_found = false
+                for (const ach_obj of user.achievements) {
+                    // console.log(ach_obj)
+                    // console.log(ach)
+                    if (ach_obj.achievement.name === ach.name) {
+                        // console.log("found")
+                        ach_found = true;
+                        ach_obj.unlocked = true;
+                        ach_obj.count = ach_count;
+                    }
+                }
+                if (!ach_found) {
+                    // console.log("still not found")
+                    user.achievements.push({
+                        achievement: new mongoose.Types.ObjectId(ach._id),
+                        unlocked: true,
+                        count: ach_count
+                    })
+                }
+            } else {
+                return res.status(200).json({
+                    error: user.achievements,
+                    ach:ach
+                });
+                for (const ach_obj of user.achievements) {
+                    if (ach_obj.achievement.name === ach.name) {
+                        ach_obj.unlocked = false;
+                        ach_obj.count = 0;
+                    }
+                }
+            }
+            // Save user
+            await user.save();
+        }
+        return res.status(200).json({
+            error: false,
+            message: "PUNCHBAG - Processed Successfully.",
+        });
+    }
+    catch (err) {
+        console.log(err);
+        return res.status(200).json({
+            error: true,
+            message: "An unexpected error occurred. Please try again later.",
+        });
+    }
+})
+router.get('/early_bird', async (req, res) => {
+    try {
+        let ach = await FantasyAchievement.findOne({ name: "EARLY BIRD" });
+        // Fetch all users and parse one by one
+        let users = await User.find({}).populate("achievements.achievement");
+        for (const user of users) {
+            console.log("Processing user: " + user.email);
+            let ach_count = 0;
+            // Fetch all leagues where user is present and format is H2H
+            let leagues = await FantasyLeague.find({ users_onboard: user.email, is_deleted: false }).populate("draftID")
+            for (const league of leagues) {
+                console.log(" Processing league: " + league.league_name);
+                // Fetch user's team in the league
+                if (league.draftID.state === "Ended") {
+                    ach_count = ach_count + 1;
+                }
+            }
+            // When all leagues of user are processed. Check if ach_count > 0, update user's achievements
+            if (ach_count > 0) {
+                let ach_found = false
+                for (const ach_obj of user.achievements) {
+                    // console.log(ach_obj)
+                    // console.log(ach)
+                    if (ach_obj.achievement.name === ach.name) {
+                        // console.log("found")
+                        ach_found = true;
+                        ach_obj.unlocked = true;
+                        ach_obj.count = ach_count;
+                    }
+                }
+                if (!ach_found) {
+                    // console.log("still not found")
+                    user.achievements.push({
+                        achievement: new mongoose.Types.ObjectId(ach._id),
+                        unlocked: true,
+                        count: ach_count
+                    })
+                }
+            } else {
+                for (const ach_obj of user.achievements) {
+                    if (ach_obj.achievement.name === ach.name) {
+                        ach_obj.unlocked = false;
+                        ach_obj.count = 0;
+                    }
+                }
+            }
+            // Save user
+            await user.save();
+        }
+        return res.status(200).json({
+            error: false,
+            message: "EARLY BIRD - Processed Successfully.",
+        });
+    }
+    catch (err) {
+        console.log(err);
+        return res.status(200).json({
+            error: true,
+            message: "An unexpected error occurred. Please try again later.",
+        });
+    }
+})
 
+
+
+
+
+// Update player details
 router.get('/players', async (req, res) => {
     try {
         let bulkOps = [];
