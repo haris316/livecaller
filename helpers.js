@@ -111,23 +111,23 @@ export const calculateTeamPoints = async (league, team, gameweek) => {
         for (let playerObj of gameweekSquad.players) {
             // console.log("entering player loop");
             if (playerObj.in_team) {
-                console.log("player in team");
+                // console.log("player in team");
                 // console.log(playerObj);
                 let playerDetails = await Player.findOne({ _id: playerObj.player });
                 // console.log("playerDetails")
                 // console.log(playerDetails)
                 if (playerDetails) {
                     let playerPoints = await calculatePlayerPoints(league, playerDetails, gameweek);
-                    console.log("playerPoints")
-                    console.log(playerDetails.name)
-                    console.log(playerPoints)
+                    // console.log("playerPoints")
+                    // console.log(playerDetails.name)
+                    // console.log(playerPoints)
                     if (!isNaN(playerPoints)) {
                         // console.log("inside nan condition")
                         // if (playerObj.captain) { playerPoints = playerPoints * 2; }
                         points += playerPoints;
                     }
-                    console.log("new team points")
-                    console.log(points)
+                    // console.log("new team points")
+                    // console.log(points)
                 }
             }
         }

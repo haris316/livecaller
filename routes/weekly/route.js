@@ -237,87 +237,87 @@ router.get('/destroyer', async (req, res) => {
                 // Fetch all leagues where user is present
                 let leagues = await FantasyLeague.find({ users_onboard: user.email, is_deleted: false, 'league_configuration.format': 'Head to Head' }).populate("draftID")
                 for (const league of leagues) {
-                    if (league.draftID.state === "Ended"){
+                    if (league.draftID.state === "Ended") {
                         console.log(" Processing league: " + league.league_name);
                         // console.log(league.draftID)
                         // console.log(league.league_fixtures)
-                    for (const fixture of league.league_fixtures) {
-                        if (fixture.gameweek === last_gameweek.name) {
-                            // console.log(fixture);
-                            let user_team = null;
-                            let opp_team = null;
-                            let team1 = FantasyTeam.findOne({ _id: fixture.teams[0] });
-                            let team2 = FantasyTeam.findOne({ _id: fixture.teams[1] });
-                            if (team1 && team2) {
-                                if (team1.user_email === user.email) {
-                                    user_team = team1
-                                    opp_team = team2
-                                }
-                                else if (team2.user_email === user.email) {
-                                    user_team = team2
-                                    opp_team = team1
-                                }
-                                if (user_team && opp_team) {
-                                    let user_points = calculateTeamPoints(league, user_team, last_gameweek)
-                                    let opp_points = calculateTeamPoints(league, opp_team, last_gameweek)
-                                    if ((user_points > (2 * opp_points))) {
-                                        ach_count = ach_count + 1;
+                        for (const fixture of league.league_fixtures) {
+                            if (fixture.gameweek === last_gameweek.name) {
+                                // console.log(fixture);
+                                let user_team = null;
+                                let opp_team = null;
+                                let team1 = FantasyTeam.findOne({ _id: fixture.teams[0] });
+                                let team2 = FantasyTeam.findOne({ _id: fixture.teams[1] });
+                                if (team1 && team2) {
+                                    if (team1.user_email === user.email) {
+                                        user_team = team1
+                                        opp_team = team2
+                                    }
+                                    else if (team2.user_email === user.email) {
+                                        user_team = team2
+                                        opp_team = team1
+                                    }
+                                    if (user_team && opp_team) {
+                                        let user_points = calculateTeamPoints(league, user_team, last_gameweek)
+                                        let opp_points = calculateTeamPoints(league, opp_team, last_gameweek)
+                                        if ((user_points > (2 * opp_points))) {
+                                            ach_count = ach_count + 1;
+                                        }
                                     }
                                 }
                             }
                         }
                     }
                 }
-            }
-            // When all leagues of user are processed. Check if ach_count > 0, update user's achievements
-            if (ach_count > 0) {
-                let ach_found = false
-                for (const ach_obj of user.achievements) {
-                    // console.log(ach_obj)
-                    // console.log(ach)
-                    if (ach_obj.achievement.name === ach.name) {
-                        // console.log("found")
-                        ach_found = true;
-                        ach_obj.unlocked = true;
-                        ach_obj.count = ach_obj.count + ach_count;
+                // When all leagues of user are processed. Check if ach_count > 0, update user's achievements
+                if (ach_count > 0) {
+                    let ach_found = false
+                    for (const ach_obj of user.achievements) {
+                        // console.log(ach_obj)
+                        // console.log(ach)
+                        if (ach_obj.achievement.name === ach.name) {
+                            // console.log("found")
+                            ach_found = true;
+                            ach_obj.unlocked = true;
+                            ach_obj.count = ach_obj.count + ach_count;
+                        }
                     }
+                    if (!ach_found) {
+                        // console.log("still not found")
+                        user.achievements.push({
+                            achievement: new mongoose.Types.ObjectId(ach._id),
+                            unlocked: true,
+                            count: ach_count
+                        })
+                    }
+                    // Save user
+                    await user.save();
                 }
-                if (!ach_found) {
-                    // console.log("still not found")
-                    user.achievements.push({
-                        achievement: new mongoose.Types.ObjectId(ach._id),
-                        unlocked: true,
-                        count: ach_count
-                    })
-                }
-                // Save user
-                await user.save();
             }
+        } else {
+            return res.status(200).json({
+                error: true,
+                message: "No last game week found.",
+            });
         }
-    } else {
         return res.status(200).json({
-            error: true,
-            message: "No last game week found.",
+            error: false,
+            message: "DESTROYER - Processed Successfully.",
         });
     }
-    return res.status(200).json({
-        error: false,
-        message: "DESTROYER - Processed Successfully.",
-    });
-}
     catch (err) {
-    console.log(err);
-    return res.status(200).json({
-        error: true,
-        message: "An unexpected error occurred. Please try again later.",
-    });
-}
+        console.log(err);
+        return res.status(200).json({
+            error: true,
+            message: "An unexpected error occurred. Please try again later.",
+        });
+    }
 })
-router.get('/punchbag', async (req, res) => {
+router.get('/punch_bag', async (req, res) => {
     try {
         // Parameter to set number of wins required
         const lose_number = 8;
-        let ach = await FantasyAchievement.findOne({ name: "PUNCHBAG" });
+        let ach = await FantasyAchievement.findOne({ name: "PUNCH BAG" });
         // Fetch all users and parse one by one
         let users = await User.find({}).populate("achievements.achievement");
         for (const user of users) {
@@ -373,10 +373,6 @@ router.get('/punchbag', async (req, res) => {
                     })
                 }
             } else {
-                return res.status(200).json({
-                    error: user.achievements,
-                    ach:ach
-                });
                 for (const ach_obj of user.achievements) {
                     if (ach_obj.achievement.name === ach.name) {
                         ach_obj.unlocked = false;
@@ -462,11 +458,171 @@ router.get('/early_bird', async (req, res) => {
         });
     }
 })
+router.get('/politician', async (req, res) => {
+    try {
+        // Parameter to set number of wins required
+        const draw_number = 4;
+        let ach = await FantasyAchievement.findOne({ name: "POLITICIAN" });
+        // Fetch all users and parse one by one
+        let users = await User.find({}).populate("achievements.achievement");
+        for (const user of users) {
+            console.log("Processing user: " + user.email);
+            let ach_count = 0;
+            // Fetch all leagues where user is present and format is H2H
+            let leagues = await FantasyLeague.find({ users_onboard: user.email, is_deleted: false, 'league_configuration.format': 'Head to Head' }).populate("head_to_head_points.team")
+            for (const league of leagues) {
+                console.log(" Processing league: " + league.league_name);
+                // Fetch user's team in the league
+                for (const team of league.head_to_head_points) {
+                    // console.log("user email : "+user.email)
+                    // console.log(team.team.user_email);
+                    // console.log("team email : "+team.user_email)
+                    if (team.team.user_email === user.email) {
+                        // Convert form to array and check the form of the team for number of consecutive draws
+                        let form_array = team.form.split(" ");
+                        // console.log(form_array);
+                        let draw_count = 0;
+                        for (const form of form_array) {
+                            // If draw, increase draw_count
+                            if (form === "D") draw_count++;
+                            // If draw_count reaches draw_number, increase ach_count and reset draw_count
+                            if (draw_count === draw_number) {
+                                ach_count++;
+                                draw_count = 0;
+                            }
+                        }
+                    }
+                }
+            }
+            // When all leagues of user are processed. Check if ach_count > 0, update user's achievements
+            if (ach_count > 0) {
+                let ach_found = false
+                for (const ach_obj of user.achievements) {
+                    // console.log(ach_obj)
+                    // console.log(ach)
+                    if (ach_obj.achievement.name === ach.name) {
+                        // console.log("found")
+                        ach_found = true;
+                        ach_obj.unlocked = true;
+                        ach_obj.count = ach_count;
+                    }
+                }
+                if (!ach_found) {
+                    // console.log("still not found")
+                    user.achievements.push({
+                        achievement: new mongoose.Types.ObjectId(ach._id),
+                        unlocked: true,
+                        count: ach_count
+                    })
+                }
+            } else {
+                for (const ach_obj of user.achievements) {
+                    if (ach_obj.achievement.name === ach.name) {
+                        ach_obj.unlocked = false;
+                        ach_obj.count = 0;
+                    }
+                }
+            }
+            // Save user
+            await user.save();
+        }
+        return res.status(200).json({
+            error: false,
+            message: "POLITICIAN - Processed Successfully.",
+        });
+    }
+    catch (err) {
+        console.log(err);
+        return res.status(200).json({
+            error: true,
+            message: "An unexpected error occurred. Please try again later.",
+        });
+    }
+})
+router.get('/rocketman', async (req, res) => {
+    try {
+        // Parameter to set number of wins required
+        let win_points = 2000;
+        let ach = await FantasyAchievement.findOne({ name: "ROCKETMAN" });
+        // Fetch all users and parse one by one
+        let users = await User.find({}).populate("achievements.achievement");
 
+        let gameweeks = await GameWeek.find({}).sort({ starting_at: 1 });
+        const currentGameweekIndex = gameweeks.findIndex(gw => gw.is_current === true);
+        if (currentGameweekIndex !== -1) {
+            gameweeks = gameweeks.slice(0, currentGameweekIndex + 1);
+        }
 
+        for (const user of users) {
+            console.log("Processing user: " + user.email);
+            let ach_count = 0;
+            // Fetch all leagues where user is present
+            let leagues = await FantasyLeague.find({ users_onboard: user.email, is_deleted: false }).populate("draftID").populate("teams.team")
+            for (const league of leagues) {
+                if (league.draftID.state === "Ended") {
+                    console.log(" Processing league: " + league.league_name);
+                    let points_sum = 0;
+                    let user_team = null;
+                    league.teams.map((item) => {
+                        if (item.user_email === user.email) user_team = item.team;
+                    })
+                    for (const gameweek of gameweeks) {
+                        let cur_gw_points = await calculateTeamPoints(league, user_team, gameweek);
+                        points_sum = points_sum + cur_gw_points;
+                        console.log(gameweek.name);
+                        console.log(points_sum);
+                    }
+                    if (points_sum >= win_points) ach_count = ach_count + 1;
+                }
+            }
 
-
-
+            // When all leagues of user are processed. Check if ach_count > 0, update user's achievements
+            if (ach_count > 0) {
+                let ach_found = false
+                for (const ach_obj of user.achievements) {
+                    // console.log(ach_obj)
+                    // console.log(ach)
+                    if (ach_obj.achievement.name === ach.name) {
+                        // console.log("found")
+                        ach_found = true;
+                        ach_obj.unlocked = true;
+                        ach_obj.count = ach_obj.count + ach_count;
+                    }
+                }
+                if (!ach_found) {
+                    // console.log("still not found")
+                    user.achievements.push({
+                        achievement: new mongoose.Types.ObjectId(ach._id),
+                        unlocked: true,
+                        count: ach_count
+                    })
+                }
+                // Save user
+                await user.save();
+            } else {
+                for (const ach_obj of user.achievements) {
+                    if (ach_obj.achievement.name === ach.name) {
+                        ach_obj.unlocked = false;
+                        ach_obj.count = 0;
+                    }
+                }
+                // Save user
+                await user.save();
+            }
+        }
+        return res.status(200).json({
+            error: false,
+            message: "ROCKETMAN - Processed Successfully.",
+        });
+    }
+    catch (err) {
+        console.log(err);
+        return res.status(200).json({
+            error: true,
+            message: "An unexpected error occurred. Please try again later.",
+        });
+    }
+})
 // Update player details
 router.get('/players', async (req, res) => {
     try {
