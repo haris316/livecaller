@@ -626,72 +626,220 @@ router.get('/rocketman', async (req, res) => {
 // Update player details
 router.get('/players', async (req, res) => {
     try {
+        // Initiate Variables
         let bulkOps = [];
         const seasonID = process.env.NEXT_PUBLIC_SEASON_ID
-        const api_url = "https://api.sportmonks.com/v3/football/players/"
+        const players_api_url = "https://api.sportmonks.com/v3/football/players/"
+        const team_api_url = "https://api.sportmonks.com/v3/football/teams/seasons/"
         const url_options = "?include=statistics.details;"
         const agent = new https.Agent({
             rejectUnauthorized: false,
         });
         axios.defaults.httpsAgent = agent
-        let playerIDs = await Player.find({})
-        playerIDs = playerIDs.map((player) => {
-            return {
-                playerID: player.id,
-                teamID: player.teamID,
-            }
+
+        // Updating teams
+        let full_URL = team_api_url + seasonID + "?include=players;"
+        let team_data = [];
+        let response = await axios.get(full_URL, {
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "Authorization": process.env.NEXT_PUBLIC_SPORTMONKS_TOKEN
+            },
+            agent: agent
+        })
+        if (response.status === 200) {
+            team_data = response.data.data;
+        } else {
+            return res.status(200).json({
+                error: true,
+                message: "Line : 653, no teams found."
+            });
+        }
+        for (const team of team_data) {
+            const query = {
+                id: team.id,
+                seasonID: Number(seasonID),
+                name: team.name,
+                short_code: team.short_code,
+                image_path: team.image_path,
+                players: team.players.map((player) => { return player.player_id })
+            };
+            console.log(query.name);
+            await connectToDb();
+            const res = await Team.updateOne({ id: team.id }, { $set: query }, { upsert: true });
+        }
+
+        // Updating players
+        let data_to_insert = [];
+        const teams = await Team.find({})
+        const all_players = await Player.find({})
+        const all_players_ids = all_players.map((player) => player.id);
+        const gameweek = await GameWeek.find({ seasonID: seasonID })
+        const playerIDs = []
+        teams.map((team) => {
+            team.players.map((player) => {
+                playerIDs.push({
+                    playerID: player,
+                    teamID: team.id,
+                    team_name: team.name,
+                    team_image_path: team.image_path
+                })
+            })
         })
         for (const player of playerIDs) {
             try {
-                const playerID = player.playerID;
-                const full_URL = api_url + playerID + url_options;
-                // console.log("full_URL : " + full_URL)
-                const response = await axios.get(full_URL, {
+                let full_URL = api_url + player.playerID + url_options
+                let response = await axios.get(full_URL, {
                     headers: {
                         "Content-Type": "application/json",
                         "Accept": "application/json",
                         "Authorization": process.env.NEXT_PUBLIC_SPORTMONKS_TOKEN
                     },
                     agent: agent
-                });
-
+                })
                 if (response.status !== 200) {
-                    console.log(`Failed to fetch data for player ${playerID}`);
+                    console.log("Line : 702, Failed to fetch data from API for :" + player.playerID);
                     continue;
                 }
-                const player_data = response.data.data;
-                const rating = player_data?.statistics?.filter(i => i.season_id == seasonID)[0]?.details?.filter(i => i.type_id == 118)[0]?.value?.average || 0;
-                if (rating != 0) {
-                    console.log(`Updating rating for ${player_data.name}: ${rating}`);
-                    bulkOps.push({
-                        updateOne: {
-                            filter: { id: player.playerID },
-                            update: { $set: { rating: rating } }
+                let player_data = response.data.data;
+                if (player_data.id in all_players_ids) {
+                    const player_to_update = {
+                        id: player_data?.id,
+                        name: player_data?.name,
+                        common_name: player_data?.common_name,
+                        image_path: player_data?.image_path,
+                        nationality: player_data?.nationality?.name,
+                        nationality_image_path: player_data?.nationality?.image_path,
+                        positionID: player_data?.position?.id,
+                        position_name: player_data?.position?.name,
+                        detailed_position: player_data?.detailedposition?.name,
+                        teamID: player?.teamID,
+                        team_name: player?.team_name,
+                        team_image_path: player?.team_image_path,
+                    };
+                    const existing_player = all_players.find(p => p.id === player_to_update.id);
+                    if (existing_player) {
+                        const changed_fields = Object.keys(player_to_update).filter(key => existing_player[key] !== player_to_update[key]);
+                        if (changed_fields.length > 0) {
+                            console.log(`Updating ${changed_fields.length} fields for ${player_to_update.name}: ${changed_fields.join(", ")}`);
+                            bulkOps.push({
+                                updateOne: {
+                                    filter: { id: player_to_update.id },
+                                    update: { $set: player_to_update }
+                                }
+                            });
                         }
-                    });
+                    }
+                    // Execute batch update
+                    if (bulkOps.length > 50) {
+                        await Player.bulkWrite(bulkOps);
+                        console.log(`Updated ratings for ${bulkOps.length} players.`);
+                        bulkOps = [];
+                    }
+                } else {
+                    let player_points = [];
+                    gameweek.forEach((gw) => {
+                        let points_obj = {
+                            status: "Not Started",
+                            seasonID: seasonID,
+                            gameweek: gw._id,
+                            points: null,
+                            fpl_stats: null
+                        }
+                        player_points.push(points_obj);
+                    })
+
+                    const query = {
+                        "id": player_data?.id,
+                        "name": player_data?.name,
+                        "common_name": player_data?.common_name,
+                        "image_path": player_data?.image_path,
+                        "nationality": player_data?.nationality?.name,
+                        "nationality_image_path": player_data?.nationality?.image_path,
+                        "positionID": player_data?.position?.id,
+                        "position_name": player_data?.position?.name,
+                        "detailed_position": player_data?.detailedposition?.name,
+                        "teamID": player?.teamID,
+                        "team_name": player?.team_name,
+                        "team_image_path": player?.team_image_path,
+                        "rating": player_data?.statistics?.filter(i => i.season_id == seasonID)[0]?.details?.filter(i => i.type_id == 118)[0]?.value?.average || 0,
+                        "points": player_points,
+                    };
+                    console.log("New player");
+                    console.log(query.name);
+                    await connectToDb();
+                    const res = await Player.updateOne({ id: query.id }, { $set: query }, { upsert: true });
                 }
-                // Execute batch update
-                if (bulkOps.length > 50) {
-                    await Player.bulkWrite(bulkOps);
-                    console.log(`Updated ratings for ${bulkOps.length} players.`);
-                    bulkOps = [];
-                }
-            } catch {
-                console.log("Some error with")
+            } catch (error) {
+                console.log("Line :758, Some error with")
                 console.log(player)
                 console.log("Continuing ahead...")
-                continue
+                continue;
             }
-        }
-        // Execute batch update
-        if (bulkOps.length > 0) {
-            await Player.bulkWrite(bulkOps);
-            console.log(`Updated ratings for ${bulkOps.length} players.`);
         }
         return res.status(200).json({
             error: false,
-            message: `Updated ratings for players successfully.`
+            message: `Updated players successfully.`
         });
+
+        // // Old Players Update
+        // let playerIDs = await Player.find({})
+        // playerIDs = playerIDs.map((player) => {
+        //     return {
+        //         playerID: player.id,
+        //         teamID: player.teamID,
+        //     }
+        // })
+        // for (const player of playerIDs) {
+        //     try {
+        //         const playerID = player.playerID;
+        //         const full_URL = api_url + playerID + url_options;
+        //         const response = await axios.get(full_URL, {
+        //             headers: {
+        //                 "Content-Type": "application/json",
+        //                 "Accept": "application/json",
+        //                 "Authorization": process.env.NEXT_PUBLIC_SPORTMONKS_TOKEN
+        //             },
+        //             agent: agent
+        //         });
+        //         if (response.status !== 200) {
+        //             console.log(`Failed to fetch data for player ${playerID}`);
+        //             continue;
+        //         }
+        //         const player_data = response.data.data;
+        //         const rating = player_data?.statistics?.filter(i => i.season_id == seasonID)[0]?.details?.filter(i => i.type_id == 118)[0]?.value?.average || 0;
+        //         if (rating != 0) {
+        //             console.log(`Updating rating for ${player_data.name}: ${rating}`);
+        //             bulkOps.push({
+        //                 updateOne: {
+        //                     filter: { id: player.playerID },
+        //                     update: { $set: { rating: rating } }
+        //                 }
+        //             });
+        //         }
+        //         // Execute batch update
+        //         if (bulkOps.length > 50) {
+        //             await Player.bulkWrite(bulkOps);
+        //             console.log(`Updated ratings for ${bulkOps.length} players.`);
+        //             bulkOps = [];
+        //         }
+        //     } catch {
+        //         console.log("Some error with")
+        //         console.log(player)
+        //         console.log("Continuing ahead...")
+        //         continue
+        //     }
+        // }
+        // // Execute batch update
+        // if (bulkOps.length > 0) {
+        //     await Player.bulkWrite(bulkOps);
+        //     console.log(`Updated ratings for ${bulkOps.length} players.`);
+        // }
+        // return res.status(200).json({
+        //     error: false,
+        //     message: `Updated ratings for players successfully.`
+        // });
 
     } catch (err) {
         console.log(err);
