@@ -666,7 +666,6 @@ router.get('/players', async (req, res) => {
                 players: team.players.map((player) => { return player.player_id })
             };
             console.log(query.name);
-            await connectToDb();
             const res = await Team.updateOne({ id: team.id }, { $set: query }, { upsert: true });
         }
 
@@ -689,7 +688,7 @@ router.get('/players', async (req, res) => {
         })
         for (const player of playerIDs) {
             try {
-                let full_URL = api_url + player.playerID + url_options
+                let full_URL = players_api_url + player.playerID + url_options
                 let response = await axios.get(full_URL, {
                     headers: {
                         "Content-Type": "application/json",
@@ -703,7 +702,9 @@ router.get('/players', async (req, res) => {
                     continue;
                 }
                 let player_data = response.data.data;
-                if (player_data.id in all_players_ids) {
+                console.log(all_players_ids.indexOf(player_data?.id));
+                console.log(player_data?.name);
+                if (all_players_ids.indexOf(player_data?.id) != -1) {
                     const player_to_update = {
                         id: player_data?.id,
                         name: player_data?.name,
@@ -768,15 +769,20 @@ router.get('/players', async (req, res) => {
                     };
                     console.log("New player");
                     console.log(query.name);
-                    await connectToDb();
                     const res = await Player.updateOne({ id: query.id }, { $set: query }, { upsert: true });
                 }
             } catch (error) {
-                console.log("Line :758, Some error with")
+                console.log(error);
+                console.log("Line :774, Some error with")
                 console.log(player)
                 console.log("Continuing ahead...")
                 continue;
             }
+        }
+        if (bulkOps.length > 0) {
+            await Player.bulkWrite(bulkOps);
+            console.log(`Updated ratings for ${bulkOps.length} players.`);
+            bulkOps = [];
         }
         return res.status(200).json({
             error: false,
